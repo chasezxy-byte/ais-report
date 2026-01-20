@@ -47,7 +47,8 @@
         th, td { border: 1px solid black; text-align: center; font-size: 12px; height: 32px; position: relative; }
         .bg-yellow-cell { background-color: #ffff00 !important; }
         
-        .comment-indicator { position: absolute; top: 0; right: 0; border-width: 0 8px 8px 0; border-color: transparent #f97316 transparent transparent; border-style: solid; }
+        /* UPDATED: Removed hardcoded color to allow dynamic selection */
+        .comment-indicator { position: absolute; top: 0; right: 0; border-width: 0 8px 8px 0; border-style: solid; }
         .comment-popup { display: none; position: absolute; z-index: 100; background: #334155; color: white; padding: 8px; border-radius: 4px; font-size: 11px; width: 150px; top: 100%; left: 50%; transform: translateX(-50%); }
         td:hover .comment-popup { display: block; }
         #save-status { font-size: 10px; color: #10b981; opacity: 0; transition: opacity 0.5s; }
@@ -134,16 +135,11 @@
     </div>
 
     <script>
-        // USER ACCOUNTS
-        const users = {
-            "admin": "1234",
-            "teacher": "ais2024"
-        };
+        const users = { "admin": "1234", "teacher": "ais2024" };
 
         function checkLogin() {
             const u = document.getElementById('user-input').value.toLowerCase();
             const p = document.getElementById('pass-input').value;
-
             if (users[u] && users[u] === p) {
                 document.getElementById('login-overlay').style.display = "none";
                 document.getElementById('main-app').classList.remove('hidden');
@@ -154,12 +150,7 @@
             }
         }
 
-        function logout() {
-            sessionStorage.removeItem('isLoggedIn');
-            location.reload();
-        }
-
-        // Check if already logged in for this session
+        function logout() { sessionStorage.removeItem('isLoggedIn'); location.reload(); }
         if(sessionStorage.getItem('isLoggedIn') === 'true') {
             document.getElementById('login-overlay').style.display = "none";
             document.getElementById('main-app').classList.remove('hidden');
@@ -183,6 +174,7 @@
             });
         }
 
+        // UPDATED: Added support for loading custom indicator colors
         function addRow(savedData = null) {
             const tbody = document.getElementById('table-body');
             const rowCount = tbody.rows.length;
@@ -197,26 +189,44 @@
 
             for(let j=0; j<16; j++) {
                 const yellowClass = (j === 6 || j === 9) ? 'bg-yellow-cell' : '';
-                const val = (savedData && savedData.cells[j]) ? savedData.cells[j].text : '';
-                const com = (savedData && savedData.cells[j]) ? savedData.cells[j].comment : '';
-                html += `<td contenteditable="true" oninput="autoSave()" class="${yellowClass}" oncontextmenu="handleRightClick(event)">${val}${com ? `<div class="comment-indicator"></div><div class="comment-popup">${com}</div>` : ''}</td>`;
+                const cellData = (savedData && savedData.cells[j]) ? savedData.cells[j] : {text: '', comment: '', color: ''};
+                
+                let indicatorHtml = '';
+                if (cellData.comment) {
+                    const color = cellData.color || '#f97316';
+                    indicatorHtml = `<div class="comment-indicator" style="border-color: transparent ${color} transparent transparent"></div><div class="comment-popup">${cellData.comment}</div>`;
+                }
+
+                html += `<td contenteditable="true" oninput="autoSave()" class="${yellowClass}" oncontextmenu="handleRightClick(event)">${cellData.text}${indicatorHtml}</td>`;
             }
             tr.innerHTML = html;
             tbody.appendChild(tr);
         }
 
+        // UPDATED: Added a prompt to choose Red, Green, or Orange
         function handleRightClick(e) {
             e.preventDefault();
             const cell = e.currentTarget;
-            const existing = cell.querySelector('.comment-popup')?.innerText || "";
-            const note = prompt("Comment:", existing);
+            const existingPopup = cell.querySelector('.comment-popup');
+            const currentText = existingPopup ? existingPopup.innerText : "";
+            
+            const note = prompt("Enter Comment:", currentText);
             if (note !== null) {
                 cell.querySelectorAll('.comment-indicator, .comment-popup').forEach(el => el.remove());
-                if (note.trim()) cell.insertAdjacentHTML('beforeend', `<div class="comment-indicator"></div><div class="comment-popup">${note}</div>`);
+                if (note.trim()) {
+                    const colorChoice = prompt("Choose color: (1) Red, (2) Green, (3) Orange", "3");
+                    let hexColor = "#f97316"; // Default Orange
+                    if (colorChoice === "1") hexColor = "#ef4444"; // Red
+                    if (colorChoice === "2") hexColor = "#22c55e"; // Green
+                    
+                    const html = `<div class="comment-indicator" style="border-color: transparent ${hexColor} transparent transparent"></div><div class="comment-popup">${note}</div>`;
+                    cell.insertAdjacentHTML('beforeend', html);
+                }
                 autoSave();
             }
         }
 
+        // UPDATED: Now saves the specific color code of the indicator
         function autoSave() {
             const data = {
                 month: document.getElementById('val-month').innerText,
@@ -229,7 +239,14 @@
                 const tds = row.querySelectorAll('td[contenteditable="true"]');
                 if(tds.length) data.students.push({
                     name: tds[0].innerText, gender: tds[1].innerText,
-                    cells: Array.from(tds).slice(2).map(td => ({ text: td.childNodes[0]?.nodeValue?.trim() || "", comment: td.querySelector('.comment-popup')?.innerText || "" }))
+                    cells: Array.from(tds).slice(2).map(td => {
+                        const indicator = td.querySelector('.comment-indicator');
+                        return { 
+                            text: td.childNodes[0]?.nodeValue?.trim() || "", 
+                            comment: td.querySelector('.comment-popup')?.innerText || "",
+                            color: indicator ? indicator.style.borderColor.split(' ')[1] : ""
+                        }
+                    })
                 });
             });
             localStorage.setItem('ais_comment_data', JSON.stringify(data));
