@@ -1,293 +1,517 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIS Student List - Secure Access</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;700&display=swap');
-        
-        body, button, input, table, [contenteditable] { 
-            font-family: 'Kantumruy Pro', sans-serif; 
-        }
 
-        #login-overlay {
-            position: fixed;
-            inset: 0;
-            background: #0f172a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-        }
+<meta charset="UTF-8">
 
-        @media print {
-            @page { size: A4 landscape; margin: 15mm 10mm 15mm 10mm; }
-            body { background: white; -webkit-print-color-adjust: exact; }
-            .no-print, .comment-indicator, .comment-popup, #login-overlay { display: none !important; }
-            .print-header, .print-footer {
-                display: block !important;
-                position: fixed;
-                width: 100%;
-                font-family: "Times New Roman", Times, serif;
-                font-size: 10pt;
-                color: black;
-            }
-            .print-header { top: -10mm; text-align: left; }
-            .print-footer { bottom: -10mm; text-align: right; }
-            .document-page { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; }
-        }
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        .print-header, .print-footer { display: none; }
-        .document-page { width: 287mm; min-height: 200mm; background: white; padding: 15mm; margin: 20px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        .doc-logo { max-height: 75px; }
-        .dotted-line { border-bottom: 1px dotted black; display: inline-block; min-height: 1.5rem; padding: 0 5px; }
-        table { border: 1.5px solid black; width: 100%; border-collapse: collapse; table-layout: fixed; }
-        th, td { border: 1px solid black; text-align: center; font-size: 12px; height: 32px; position: relative; }
-        .bg-yellow-cell { background-color: #ffff00 !important; }
-        
-        /* UPDATED: Removed hardcoded color to allow dynamic selection */
-        .comment-indicator { position: absolute; top: 0; right: 0; border-width: 0 8px 8px 0; border-style: solid; }
-        .comment-popup { display: none; position: absolute; z-index: 100; background: #334155; color: white; padding: 8px; border-radius: 4px; font-size: 11px; width: 150px; top: 100%; left: 50%; transform: translateX(-50%); }
-        td:hover .comment-popup { display: block; }
-        #save-status { font-size: 10px; color: #10b981; opacity: 0; transition: opacity 0.5s; }
-    </style>
+<title>AIS Student List - Secure Access</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;700&display=swap');
+
+body, button, input, table, [contenteditable] {
+
+font-family: 'Kantumruy Pro', sans-serif;
+
+}
+
+
+#login-overlay {
+
+position: fixed;
+
+inset: 0;
+
+background: #0f172a;
+
+display: flex;
+
+align-items: center;
+
+justify-content: center;
+
+z-index: 9999;
+
+}
+
+
+@media print {
+
+@page { size: A4 landscape; margin: 15mm 10mm 15mm 10mm; }
+
+body { background: white; -webkit-print-color-adjust: exact; }
+
+.no-print, .comment-indicator, .comment-popup, #login-overlay { display: none !important; }
+
+.print-header, .print-footer {
+
+display: block !important;
+
+position: fixed;
+
+width: 100%;
+
+font-family: "Times New Roman", Times, serif;
+
+font-size: 10pt;
+
+color: black;
+
+}
+
+.print-header { top: -10mm; text-align: left; }
+
+.print-footer { bottom: -10mm; text-align: right; }
+
+.document-page { box-shadow: none !important; margin: 0 !important; width: 100% !important; padding: 0 !important; }
+
+}
+
+
+.print-header, .print-footer { display: none; }
+
+.document-page { width: 287mm; min-height: 200mm; background: white; padding: 15mm; margin: 20px auto; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+.doc-logo { max-height: 75px; }
+
+.dotted-line { border-bottom: 1px dotted black; display: inline-block; min-height: 1.5rem; padding: 0 5px; }
+
+table { border: 1.5px solid black; width: 100%; border-collapse: collapse; table-layout: fixed; }
+
+th, td { border: 1px solid black; text-align: center; font-size: 12px; height: 32px; position: relative; }
+
+.bg-yellow-cell { background-color: #ffff00 !important; }
+
+.comment-indicator { position: absolute; top: 0; right: 0; border-width: 0 8px 8px 0; border-color: transparent #f97316 transparent transparent; border-style: solid; }
+
+.comment-popup { display: none; position: absolute; z-index: 100; background: #334155; color: white; padding: 8px; border-radius: 4px; font-size: 11px; width: 150px; top: 100%; left: 50%; transform: translateX(-50%); }
+
+td:hover .comment-popup { display: block; }
+
+#save-status { font-size: 10px; color: #10b981; opacity: 0; transition: opacity 0.5s; }
+
+</style>
+
 </head>
+
 <body class="bg-slate-100 min-h-screen">
 
-    <div id="login-overlay">
-        <div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
-            <img src="logo.png" alt="AIS" class="h-16 mx-auto mb-4" onerror="this.src='image_c7010c.png'">
-            <h2 class="text-xl font-bold text-slate-800 mb-2">Login to AIS Portal</h2>
-            <p class="text-slate-500 text-sm mb-6">Enter your credentials to continue</p>
-            <div class="space-y-4">
-                <input type="text" id="user-input" placeholder="Username" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
-                <input type="password" id="pass-input" placeholder="Password" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
-                <button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign In</button>
-            </div>
-            <p id="error-msg" class="text-red-500 text-sm mt-4 hidden">Invalid user or password.</p>
-        </div>
-    </div>
 
-    <div id="main-app" class="hidden">
-        <div class="fixed top-0 left-0 w-full bg-white shadow-md p-4 flex flex-wrap justify-between items-center no-print z-50">
-            <div class="flex gap-2 items-center">
-                <button onclick="addRow()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xs">+ បន្ថែមសិស្ស</button>
-                <input type="text" id="searchBar" oninput="filterStudents()" placeholder="Search names..." class="border rounded-lg px-3 py-2 text-xs w-40 outline-none focus:ring-2 focus:ring-blue-500">
-                <button onclick="downloadMemory()" class="bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Download</button>
-                <button onclick="document.getElementById('uploadTrigger').click()" class="bg-orange-500 text-white px-3 py-2 rounded-lg font-bold text-xs">Upload</button>
-                <input type="file" id="uploadTrigger" class="hidden" onchange="uploadMemory(event)" accept=".json">
-                <span id="save-status">Saved!</span>
-            </div>
-            
-            <div class="flex gap-2 items-center">
-                <span id="current-user-display" class="text-xs font-bold text-slate-500 mr-2 uppercase"></span>
-                <button onclick="logout()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-100 hover:text-red-600 transition">Logout</button>
-                <button onclick="clearAllData()" class="bg-red-50 text-red-500 px-3 py-2 rounded-lg font-bold text-xs">Clear</button>
-                <button onclick="window.print()" class="bg-black text-white px-6 py-2 rounded-lg font-bold">Print</button>
-            </div>
-        </div>
+<div id="login-overlay">
 
-        <div class="pt-24 pb-10">
-            <div class="print-header" id="ph-datetime"></div>
-            <div class="print-footer">Page 1 of 1</div>
+<div class="bg-white p-8 rounded-2xl shadow-2xl w-96 text-center">
 
-            <div id="document-preview" class="document-page">
-                <div class="flex justify-between items-start mb-4">
-                    <img src="logo.png" alt="AIS Logo" class="doc-logo" onerror="this.src='image_c7010c.png'">
-                    <div class="text-center mr-20">
-                        <h1 class="text-3xl font-bold underline underline-offset-8">បញ្ជីសិស្ស</h1>
-                        <p class="mt-4 font-bold text-sm">សម្រាប់ខែ <span id="val-month" contenteditable="true" oninput="autoSave()" class="dotted-line min-w-[150px]"></span></p>
-                    </div>
-                    <div></div>
-                </div>
+<img src="logo.png" alt="AIS" class="h-16 mx-auto mb-4" onerror="this.src='image_c7010c.png'">
 
-                <div class="flex justify-between mb-2 text-sm font-bold">
-                    <div class="w-2/3">គ្រូទទួលបន្ទុក: <span id="val-teacher" contenteditable="true" oninput="autoSave()" class="dotted-line w-3/4"></span></div>
-                    <div class="w-1/3 text-right">ម៉ោង: <span id="val-hour" contenteditable="true" oninput="autoSave()" class="dotted-line w-1/2"></span></div>
-                </div>
-                <div class="flex justify-end mb-6 text-sm font-bold">
-                    <div class="w-1/3 text-right">វេន: <span id="val-shift" contenteditable="true" oninput="autoSave()" class="dotted-line w-1/2"></span></div>
-                </div>
+<h2 class="text-xl font-bold text-slate-800 mb-2">Login to AIS Portal</h2>
 
-                <table>
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th rowspan="2" class="w-10">ល.រ</th>
-                            <th rowspan="2" class="w-48">ឈ្មោះសិស្ស</th>
-                            <th rowspan="2" class="w-10">ភេទ</th>
-                            <th colspan="4">វិន័យ</th>
-                            <th colspan="10">សកម្មភាព</th>
-                            <th rowspan="2" class="w-16">ព័ត៌មាន</th>
-                            <th rowspan="2" class="w-14">ផ្សេងៗ</th>
-                        </tr>
-                        <tr class="bg-gray-50 text-[10px]">
-                            <th>1</th><th>2</th><th>3</th><th>4</th>
-                            <th>1</th><th>2</th><th class="bg-yellow-cell">3</th><th>4</th><th>5</th>
-                            <th class="bg-yellow-cell">6</th><th>7</th><th>8</th><th>9</th><th>10</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table-body"></tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+<p class="text-slate-500 text-sm mb-6">Enter your credentials to continue</p>
 
-    <script>
-        const users = { "admin": "1234", "teacher": "ais2024" };
+<div class="space-y-4">
 
-        function checkLogin() {
-            const u = document.getElementById('user-input').value.toLowerCase();
-            const p = document.getElementById('pass-input').value;
-            if (users[u] && users[u] === p) {
-                document.getElementById('login-overlay').style.display = "none";
-                document.getElementById('main-app').classList.remove('hidden');
-                document.getElementById('current-user-display').innerText = "User: " + u;
-                sessionStorage.setItem('isLoggedIn', 'true');
-            } else {
-                document.getElementById('error-msg').classList.remove('hidden');
-            }
-        }
+<input type="text" id="user-input" placeholder="Username" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
 
-        function logout() { sessionStorage.removeItem('isLoggedIn'); location.reload(); }
-        if(sessionStorage.getItem('isLoggedIn') === 'true') {
-            document.getElementById('login-overlay').style.display = "none";
-            document.getElementById('main-app').classList.remove('hidden');
-        }
+<input type="password" id="pass-input" placeholder="Password" class="w-full border-2 border-slate-200 rounded-xl px-4 py-3 outline-none focus:border-blue-500 transition">
 
-        const khmerNumbers = ['១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩', '១០', '១១', '១២', '១៣', '១៤', '១៥', '១៦', '១៧', '១៨', '១៩', '២០'];
+<button onclick="checkLogin()" class="w-full bg-blue-600 text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition">Sign In</button>
 
-        function setAutoDate() {
-            const now = new Date();
-            const months = ["មករា", "កុម្ភៈ", "មីនា", "មេសា", "ឧសភា", "មិថុនា", "កក្កដា", "សីហា", "កញ្ញា", "តុលា", "វិច្ឆិកា", "ធ្នូ"];
-            const dateStr = `${months[now.getMonth()]} ${now.getFullYear()}`;
-            if(!document.getElementById('val-month').innerText) document.getElementById('val-month').innerText = dateStr;
-            document.getElementById('ph-datetime').innerText = now.toLocaleString();
-        }
+</div>
 
-        function filterStudents() {
-            const query = document.getElementById('searchBar').value.toLowerCase();
-            document.querySelectorAll('#table-body tr').forEach(row => {
-                const name = row.querySelector('.student-name-cell').innerText.toLowerCase();
-                row.style.display = name.includes(query) ? "" : "none";
-            });
-        }
+<p id="error-msg" class="text-red-500 text-sm mt-4 hidden">Invalid user or password.</p>
 
-        // UPDATED: Added support for loading custom indicator colors
-        function addRow(savedData = null) {
-            const tbody = document.getElementById('table-body');
-            const rowCount = tbody.rows.length;
-            const tr = document.createElement('tr');
-            
-            let html = `
-                <td class="font-bold print:hidden"><button onclick="this.parentElement.parentElement.remove(); autoSave();" class="text-red-300 hover:text-red-500">×</button></td>
-                <td class="hidden print:table-cell font-bold">${khmerNumbers[rowCount] || rowCount + 1}</td>
-                <td contenteditable="true" oninput="autoSave()" class="student-name-cell text-left px-2 font-bold uppercase" oncontextmenu="handleRightClick(event)">${savedData ? savedData.name : ''}</td>
-                <td contenteditable="true" oninput="autoSave()" oncontextmenu="handleRightClick(event)">${savedData ? savedData.gender : ''}</td>
-            `;
+</div>
 
-            for(let j=0; j<16; j++) {
-                const yellowClass = (j === 6 || j === 9) ? 'bg-yellow-cell' : '';
-                const cellData = (savedData && savedData.cells[j]) ? savedData.cells[j] : {text: '', comment: '', color: ''};
-                
-                let indicatorHtml = '';
-                if (cellData.comment) {
-                    const color = cellData.color || '#f97316';
-                    indicatorHtml = `<div class="comment-indicator" style="border-color: transparent ${color} transparent transparent"></div><div class="comment-popup">${cellData.comment}</div>`;
-                }
+</div>
 
-                html += `<td contenteditable="true" oninput="autoSave()" class="${yellowClass}" oncontextmenu="handleRightClick(event)">${cellData.text}${indicatorHtml}</td>`;
-            }
-            tr.innerHTML = html;
-            tbody.appendChild(tr);
-        }
 
-        // UPDATED: Added a prompt to choose Red, Green, or Orange
-        function handleRightClick(e) {
-            e.preventDefault();
-            const cell = e.currentTarget;
-            const existingPopup = cell.querySelector('.comment-popup');
-            const currentText = existingPopup ? existingPopup.innerText : "";
-            
-            const note = prompt("Enter Comment:", currentText);
-            if (note !== null) {
-                cell.querySelectorAll('.comment-indicator, .comment-popup').forEach(el => el.remove());
-                if (note.trim()) {
-                    const colorChoice = prompt("Choose color: (1) Red, (2) Green, (3) Orange", "3");
-                    let hexColor = "#f97316"; // Default Orange
-                    if (colorChoice === "1") hexColor = "#ef4444"; // Red
-                    if (colorChoice === "2") hexColor = "#22c55e"; // Green
-                    
-                    const html = `<div class="comment-indicator" style="border-color: transparent ${hexColor} transparent transparent"></div><div class="comment-popup">${note}</div>`;
-                    cell.insertAdjacentHTML('beforeend', html);
-                }
-                autoSave();
-            }
-        }
+<div id="main-app" class="hidden">
 
-        // UPDATED: Now saves the specific color code of the indicator
-        function autoSave() {
-            const data = {
-                month: document.getElementById('val-month').innerText,
-                teacher: document.getElementById('val-teacher').innerText,
-                hour: document.getElementById('val-hour').innerText,
-                shift: document.getElementById('val-shift').innerText,
-                students: []
-            };
-            document.querySelectorAll('#table-body tr').forEach(row => {
-                const tds = row.querySelectorAll('td[contenteditable="true"]');
-                if(tds.length) data.students.push({
-                    name: tds[0].innerText, gender: tds[1].innerText,
-                    cells: Array.from(tds).slice(2).map(td => {
-                        const indicator = td.querySelector('.comment-indicator');
-                        return { 
-                            text: td.childNodes[0]?.nodeValue?.trim() || "", 
-                            comment: td.querySelector('.comment-popup')?.innerText || "",
-                            color: indicator ? indicator.style.borderColor.split(' ')[1] : ""
-                        }
-                    })
-                });
-            });
-            localStorage.setItem('ais_comment_data', JSON.stringify(data));
-            document.getElementById('save-status').style.opacity = "1";
-            setTimeout(() => document.getElementById('save-status').style.opacity = "0", 1000);
-        }
+<div class="fixed top-0 left-0 w-full bg-white shadow-md p-4 flex flex-wrap justify-between items-center no-print z-50">
 
-        function loadFromLocalStorage() {
-            const saved = localStorage.getItem('ais_comment_data');
-            const tbody = document.getElementById('table-body');
-            tbody.innerHTML = '';
-            if (saved) {
-                const data = JSON.parse(saved);
-                document.getElementById('val-month').innerText = data.month || '';
-                document.getElementById('val-teacher').innerText = data.teacher || '';
-                document.getElementById('val-hour').innerText = data.hour || '';
-                document.getElementById('val-shift').innerText = data.shift || '';
-                data.students.forEach(s => addRow(s));
-            } else { for(let i=0; i<15; i++) addRow(); }
-            setAutoDate();
-        }
+<div class="flex gap-2 items-center">
 
-        function downloadMemory() {
-            const saved = localStorage.getItem('ais_comment_data');
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([saved], { type: 'application/json' }));
-            a.download = `AIS_Master_Data.json`;
-            a.click();
-        }
+<button onclick="addRow()" class="bg-blue-600 text-white px-3 py-2 rounded-lg font-bold text-xs">+ បន្ថែមសិស្ស</button>
 
-        function uploadMemory(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = e => { localStorage.setItem('ais_comment_data', e.target.result); loadFromLocalStorage(); };
-            reader.readAsText(file);
-        }
+<input type="text" id="searchBar" oninput="filterStudents()" placeholder="Search names..." class="border rounded-lg px-3 py-2 text-xs w-40 outline-none focus:ring-2 focus:ring-blue-500">
 
-        function clearAllData() { if(confirm("Clear everything?")) { localStorage.removeItem('ais_comment_data'); location.reload(); } }
+<button onclick="downloadMemory()" class="bg-green-600 text-white px-3 py-2 rounded-lg font-bold text-xs">Download</button>
 
-        loadFromLocalStorage();
-    </script>
+<button onclick="document.getElementById('uploadTrigger').click()" class="bg-orange-500 text-white px-3 py-2 rounded-lg font-bold text-xs">Upload</button>
+
+<input type="file" id="uploadTrigger" class="hidden" onchange="uploadMemory(event)" accept=".json">
+
+<span id="save-status">Saved!</span>
+
+</div>
+
+<div class="flex gap-2 items-center">
+
+<span id="current-user-display" class="text-xs font-bold text-slate-500 mr-2 uppercase"></span>
+
+<button onclick="logout()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg font-bold text-xs hover:bg-red-100 hover:text-red-600 transition">Logout</button>
+
+<button onclick="clearAllData()" class="bg-red-50 text-red-500 px-3 py-2 rounded-lg font-bold text-xs">Clear</button>
+
+<button onclick="window.print()" class="bg-black text-white px-6 py-2 rounded-lg font-bold">Print</button>
+
+</div>
+
+</div>
+
+
+<div class="pt-24 pb-10">
+
+<div class="print-header" id="ph-datetime"></div>
+
+<div class="print-footer">Page 1 of 1</div>
+
+
+<div id="document-preview" class="document-page">
+
+<div class="flex justify-between items-start mb-4">
+
+<img src="logo.png" alt="AIS Logo" class="doc-logo" onerror="this.src='image_c7010c.png'">
+
+<div class="text-center mr-20">
+
+<h1 class="text-3xl font-bold underline underline-offset-8">បញ្ជីសិស្ស</h1>
+
+<p class="mt-4 font-bold text-sm">សម្រាប់ខែ <span id="val-month" contenteditable="true" oninput="autoSave()" class="dotted-line min-w-[150px]"></span></p>
+
+</div>
+
+<div></div>
+
+</div>
+
+
+<div class="flex justify-between mb-2 text-sm font-bold">
+
+<div class="w-2/3">គ្រូទទួលបន្ទុក: <span id="val-teacher" contenteditable="true" oninput="autoSave()" class="dotted-line w-3/4"></span></div>
+
+<div class="w-1/3 text-right">ម៉ោង: <span id="val-hour" contenteditable="true" oninput="autoSave()" class="dotted-line w-1/2"></span></div>
+
+</div>
+
+<div class="flex justify-end mb-6 text-sm font-bold">
+
+<div class="w-1/3 text-right">វេន: <span id="val-shift" contenteditable="true" oninput="autoSave()" class="dotted-line w-1/2"></span></div>
+
+</div>
+
+
+<table>
+
+<thead>
+
+<tr class="bg-gray-50">
+
+<th rowspan="2" class="w-10">ល.រ</th>
+
+<th rowspan="2" class="w-48">ឈ្មោះសិស្ស</th>
+
+<th rowspan="2" class="w-10">ភេទ</th>
+
+<th colspan="4">វិន័យ</th>
+
+<th colspan="10">សកម្មភាព</th>
+
+<th rowspan="2" class="w-16">ព័ត៌មាន</th>
+
+<th rowspan="2" class="w-14">ផ្សេងៗ</th>
+
+</tr>
+
+<tr class="bg-gray-50 text-[10px]">
+
+<th>1</th><th>2</th><th>3</th><th>4</th>
+
+<th>1</th><th>2</th><th class="bg-yellow-cell">3</th><th>4</th><th>5</th>
+
+<th class="bg-yellow-cell">6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+
+</tr>
+
+</thead>
+
+<tbody id="table-body"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+// USER ACCOUNTS
+
+const users = {
+
+"admin": "1234",
+
+"teacher": "ais2024"
+
+};
+
+
+function checkLogin() {
+
+const u = document.getElementById('user-input').value.toLowerCase();
+
+const p = document.getElementById('pass-input').value;
+
+
+if (users[u] && users[u] === p) {
+
+document.getElementById('login-overlay').style.display = "none";
+
+document.getElementById('main-app').classList.remove('hidden');
+
+document.getElementById('current-user-display').innerText = "User: " + u;
+
+sessionStorage.setItem('isLoggedIn', 'true');
+
+} else {
+
+document.getElementById('error-msg').classList.remove('hidden');
+
+}
+
+}
+
+
+function logout() {
+
+sessionStorage.removeItem('isLoggedIn');
+
+location.reload();
+
+}
+
+
+// Check if already logged in for this session
+
+if(sessionStorage.getItem('isLoggedIn') === 'true') {
+
+document.getElementById('login-overlay').style.display = "none";
+
+document.getElementById('main-app').classList.remove('hidden');
+
+}
+
+
+const khmerNumbers = ['១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩', '១០', '១១', '១២', '១៣', '១៤', '១៥', '១៦', '១៧', '១៨', '១៩', '២០'];
+
+
+function setAutoDate() {
+
+const now = new Date();
+
+const months = ["មករា", "កុម្ភៈ", "មីនា", "មេសា", "ឧសភា", "មិថុនា", "កក្កដា", "សីហា", "កញ្ញា", "តុលា", "វិច្ឆិកា", "ធ្នូ"];
+
+const dateStr = `${months[now.getMonth()]} ${now.getFullYear()}`;
+
+if(!document.getElementById('val-month').innerText) document.getElementById('val-month').innerText = dateStr;
+
+document.getElementById('ph-datetime').innerText = now.toLocaleString();
+
+}
+
+
+function filterStudents() {
+
+const query = document.getElementById('searchBar').value.toLowerCase();
+
+document.querySelectorAll('#table-body tr').forEach(row => {
+
+const name = row.querySelector('.student-name-cell').innerText.toLowerCase();
+
+row.style.display = name.includes(query) ? "" : "none";
+
+});
+
+}
+
+
+function addRow(savedData = null) {
+
+const tbody = document.getElementById('table-body');
+
+const rowCount = tbody.rows.length;
+
+const tr = document.createElement('tr');
+
+let html = `
+
+<td class="font-bold print:hidden"><button onclick="this.parentElement.parentElement.remove(); autoSave();" class="text-red-300 hover:text-red-500">×</button></td>
+
+<td class="hidden print:table-cell font-bold">${khmerNumbers[rowCount] || rowCount + 1}</td>
+
+<td contenteditable="true" oninput="autoSave()" class="student-name-cell text-left px-2 font-bold uppercase" oncontextmenu="handleRightClick(event)">${savedData ? savedData.name : ''}</td>
+
+<td contenteditable="true" oninput="autoSave()" oncontextmenu="handleRightClick(event)">${savedData ? savedData.gender : ''}</td>
+
+`;
+
+
+for(let j=0; j<16; j++) {
+
+const yellowClass = (j === 6 || j === 9) ? 'bg-yellow-cell' : '';
+
+const val = (savedData && savedData.cells[j]) ? savedData.cells[j].text : '';
+
+const com = (savedData && savedData.cells[j]) ? savedData.cells[j].comment : '';
+
+html += `<td contenteditable="true" oninput="autoSave()" class="${yellowClass}" oncontextmenu="handleRightClick(event)">${val}${com ? `<div class="comment-indicator"></div><div class="comment-popup">${com}</div>` : ''}</td>`;
+
+}
+
+tr.innerHTML = html;
+
+tbody.appendChild(tr);
+
+}
+
+
+function handleRightClick(e) {
+
+e.preventDefault();
+
+const cell = e.currentTarget;
+
+const existing = cell.querySelector('.comment-popup')?.innerText || "";
+
+const note = prompt("Comment:", existing);
+
+if (note !== null) {
+
+cell.querySelectorAll('.comment-indicator, .comment-popup').forEach(el => el.remove());
+
+if (note.trim()) cell.insertAdjacentHTML('beforeend', `<div class="comment-indicator"></div><div class="comment-popup">${note}</div>`);
+
+autoSave();
+
+}
+
+}
+
+
+function autoSave() {
+
+const data = {
+
+month: document.getElementById('val-month').innerText,
+
+teacher: document.getElementById('val-teacher').innerText,
+
+hour: document.getElementById('val-hour').innerText,
+
+shift: document.getElementById('val-shift').innerText,
+
+students: []
+
+};
+
+document.querySelectorAll('#table-body tr').forEach(row => {
+
+const tds = row.querySelectorAll('td[contenteditable="true"]');
+
+if(tds.length) data.students.push({
+
+name: tds[0].innerText, gender: tds[1].innerText,
+
+cells: Array.from(tds).slice(2).map(td => ({ text: td.childNodes[0]?.nodeValue?.trim() || "", comment: td.querySelector('.comment-popup')?.innerText || "" }))
+
+});
+
+});
+
+localStorage.setItem('ais_comment_data', JSON.stringify(data));
+
+document.getElementById('save-status').style.opacity = "1";
+
+setTimeout(() => document.getElementById('save-status').style.opacity = "0", 1000);
+
+}
+
+
+function loadFromLocalStorage() {
+
+const saved = localStorage.getItem('ais_comment_data');
+
+const tbody = document.getElementById('table-body');
+
+tbody.innerHTML = '';
+
+if (saved) {
+
+const data = JSON.parse(saved);
+
+document.getElementById('val-month').innerText = data.month || '';
+
+document.getElementById('val-teacher').innerText = data.teacher || '';
+
+document.getElementById('val-hour').innerText = data.hour || '';
+
+document.getElementById('val-shift').innerText = data.shift || '';
+
+data.students.forEach(s => addRow(s));
+
+} else { for(let i=0; i<15; i++) addRow(); }
+
+setAutoDate();
+
+}
+
+
+function downloadMemory() {
+
+const saved = localStorage.getItem('ais_comment_data');
+
+const a = document.createElement('a');
+
+a.href = URL.createObjectURL(new Blob([saved], { type: 'application/json' }));
+
+a.download = `AIS_Master_Data.json`;
+
+a.click();
+
+}
+
+
+function uploadMemory(event) {
+
+const file = event.target.files[0];
+
+if (!file) return;
+
+const reader = new FileReader();
+
+reader.onload = e => { localStorage.setItem('ais_comment_data', e.target.result); loadFromLocalStorage(); };
+
+reader.readAsText(file);
+
+}
+
+
+function clearAllData() { if(confirm("Clear everything?")) { localStorage.removeItem('ais_comment_data'); location.reload(); } }
+
+
+loadFromLocalStorage();
+
+</script>
+
 </body>
-</html>
+
+</html> 
